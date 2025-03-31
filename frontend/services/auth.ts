@@ -1,6 +1,7 @@
 import config from "../config/config";
 import {UserInfoType} from "../src/types/user-info.type";
 import {RefreshResponse} from "../src/types/refresh-response.type";
+import {LogoutResponseType} from "../src/types/logout-response.type";
 
 export class Auth {
     public static accessTokenKey:string = 'accessToken'
@@ -32,9 +33,9 @@ export class Auth {
     }
 
     public static async logout():Promise<boolean> {
-        const refreshToken = localStorage.getItem(this.refreshTokenKey);
+        const refreshToken:string | null = localStorage.getItem(this.refreshTokenKey);
         if (refreshToken) {
-            const response = await fetch(config.host +"/logout", {
+            const response: Response = await fetch(config.host +"/logout", {
                 method: 'POST',
                 headers:{
                     'Content-type': "application/json",
@@ -43,7 +44,7 @@ export class Auth {
                 body: JSON.stringify({refreshToken: refreshToken}),
             })
             if (response && response.status === 200) {
-                const result = await response.json();
+                const result:LogoutResponseType | null = await response.json();
                 if (result && !result.error) {
                     Auth.removeTokens();
                     localStorage.removeItem(Auth.userInfoKey);

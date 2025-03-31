@@ -1,33 +1,33 @@
-import {UrlManager} from "../utils/url-manager.ts";
+import {UrlManager} from "../utils/url-manager";
 import {CustomHttp} from "../../services/custom-http";
 import config from "../../config/config";
 import {Auth} from "../../services/auth";
+import {QueryParams} from "../types/query-params.type";
+import {QuizListType} from "../types/quiz-list.type";
+import {TestResultType} from "../types/test-result.type";
+import {UserInfoType} from "../types/user-info.type";
+import {DefaultResponseType} from "../types/default-response.type";
 
 export class Choice {
+    private quizzes:QuizListType[] = [];
+    private testResult:TestResultType[] | null = null;
+    private routeParams: QueryParams;
     constructor() {
-        this.quizzes = []
-        this.testResult = null;
         this.routeParams = UrlManager.getQueryParams();
         this.init();
     }
 
-    async init() {
+    private async init():Promise<void> {
         try {
-            const result = await CustomHttp.request(config.host + '/tests')
-            if (result) {
-                if (result.error) {
-                    throw new Error(result.error)
-                }
-                this.quizzes = result;
-
-            }
+            this.quizzes = await CustomHttp.request(config.host + '/tests')
         } catch (error) {
-            return console.log(error);
+            console.log(error);
+            return;
         }
-        const userInfo = Auth.getUserInfo();
+        const userInfo:UserInfoType | null = Auth.getUserInfo();
         if (userInfo) {
             try {
-                const result = await CustomHttp.request(config.host + '/tests/results?userId=' + userInfo.userId);
+                const result: DefaultResponseType|TestResultType = await CustomHttp.request(config.host + '/tests/results?userId=' + userInfo.userId);
                 if (result) {
                     if (result.error) {
                         throw new Error(result.error)
@@ -35,7 +35,8 @@ export class Choice {
                     this.testResult = result;
                 }
             } catch (error) {
-                return console.log(error);
+                console.log(error);
+                return;
             }
         }
         this.processQuizzes();

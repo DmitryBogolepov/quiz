@@ -1,20 +1,16 @@
+import {QueryParams} from "../types/query-params.type";
+
 export class UrlManager {
 
-    static getQueryParams() {
-        const qs = document.location.hash.split('+').join(' ');
-        let params = {},
-            tokens,
-            re = /[?&]([^=]+)=([^&]*)/g;
+    public static getQueryParams():QueryParams {
+        const qs:string = document.location.hash.split('+').join(' ');
+        let params:QueryParams = {},
+            tokens : RegExpExecArray | null,
+            re:RegExp = /[?&]([^=]+)=([^&]*)/g;
 
         while(tokens = re.exec(qs)) {
             params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
         }
         return params;
-    }
-
-    static checkUserData (params) {
-        if (!params.name || !params.lastName || !params.email ) {
-            location.href = "#/";
-        }
     }
 }

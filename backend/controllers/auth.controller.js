@@ -112,11 +112,11 @@ class AuthController {
         try {
             const {error} = ValidationUtils.refreshTokenValidation(req.body);
             if (error) {
-                return res.status(400).json({error: error.details[0].message});
+                return res.status(400).json({error:true, message: error.details[0].message});
             }
             const user = UserModel.findOne({refreshToken: req.body.refreshToken});
             if (!user) {
-                return res.status(200).json({error: false, message: "Logged Out Sucessfully"});
+                return res.status(404).json({error: true, message: "Not found"});
             }
 
             UserModel.clearToken(user.email);

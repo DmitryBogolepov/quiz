@@ -90,9 +90,14 @@ export class Router {
     public async openRoute():Promise<void> {
         const urlRoute:string = window.location.hash.split('?')[0];
         if (urlRoute === '#/logout') {
-            await Auth.logout();
-            window.location.href = "#/";
-            return;
+            const result:boolean = await Auth.logout();
+            if (result) {
+                window.location.href = "#/";
+                return;
+            } else {
+
+            }
+
         }
 
         const newRoute:RouteType | undefined = this.routes.find(item => {
