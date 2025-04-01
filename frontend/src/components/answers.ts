@@ -1,9 +1,16 @@
 import {Auth} from "../../services/auth";
 import {CustomHttp} from "../../services/custom-http";
 import config from "../../config/config";
-import {UrlManager} from "../utils/url-manager.ts";
+import {UrlManager} from "../utils/url-manager";
+import {QuizAnswerType, QuizQuestionType, QuizType} from "../types/quiz.type";
+import {QueryParams} from "../types/query-params.type";
+import {UserInfoType} from "../types/user-info.type";
 
 export class Answers {
+    private quiz:QuizType | null;
+    private optionsElement:HTMLElement | null;
+    private routeParams: QueryParams;
+    private questionTitleElement:HTMLElement | null = null;
     constructor() {
         this.quiz = null;
         this.optionsElement = null;
@@ -11,10 +18,11 @@ export class Answers {
         this.init();
     }
 
-    async init() {
-        const userInfo = Auth.getUserInfo();
+    private async init():Promise<void> {
+        const userInfo:UserInfoType| null = Auth.getUserInfo();
         if (!userInfo) {
-            location.href='#/'
+            location.href='#/';
+            return ;
         }
         if (this.routeParams.id) {
             try {
@@ -40,62 +48,73 @@ export class Answers {
         }
     }
 
-    startQuiz() {
+    private startQuiz():void {
+        if (!this.quiz) {
+            return;
+        }
         this.questionTitleElement = document.getElementById("question-title");
         this.optionsElement = document.getElementById("options");
-        document.getElementById('test-name').innerText = this.quiz.name;
+        const testNameElement:HTMLElement |null = document.getElementById('test-name');
+        if (testNameElement) {
+            testNameElement.innerText = this.quiz.name;
+        }
         this.showQuestions();
     }
 
-    async setUserName() {
-        const userInfo = Auth.getUserInfo();
-        const fullName = userInfo.fullName;
-        const email = userInfo.email;
-        document.getElementById('done-text').innerText = fullName + ', ' + email;
+    private async setUserName():Promise<void> {
+        const userInfo:UserInfoType|null = Auth.getUserInfo();
+        if (userInfo) {
+            const fullName:string = userInfo.fullName;
+            const doneTextElement:HTMLElement |null = document.getElementById('done-text');
+            if (doneTextElement) {
+                doneTextElement.innerText = fullName;
+            }
+        }
     }
 
     showQuestions() {
-        this.quiz.questions.forEach((question, index) => {
-            const questionBlock = document.createElement("div");
+        if (!this.quiz) return;
+        this.quiz.questions.forEach((question:QuizQuestionType, index) => {
+            const questionBlock:HTMLElement |null = document.createElement("div");
             questionBlock.className = "question-block";
 
-            const questionTitle = document.createElement("div");
+            const questionTitle:HTMLElement |null = document.createElement("div");
             questionTitle.className = "test-question-title";
             questionTitle.innerHTML = `<span>Вопрос ${index + 1}:</span> ${question.question}`;
             questionBlock.appendChild(questionTitle);
 
-            const optionsContainer = document.createElement("div");
+            const optionsContainer:HTMLElement |null= document.createElement("div");
             optionsContainer.className = "options-container";
 
-            question.answers.forEach((answer) => {
-                const optionElement = document.createElement("div");
+            question.answers.forEach((answer:QuizAnswerType) => {
+                const optionElement:HTMLElement |null = document.createElement("div");
                 optionElement.className = "test-question-option";
 
                 const inputId = `answer-${question.id}-${answer.id}`;
 
-                const inputElement = document.createElement("input");
+                const inputElement:HTMLInputElement | null = document.createElement("input");
                 inputElement.className = "option-answer";
                 inputElement.setAttribute("id", inputId);
                 inputElement.setAttribute("type", "radio");
                 inputElement.setAttribute("disabled", "disabled");
                 inputElement.setAttribute("name", `answer-${question.id}`);
-                inputElement.setAttribute("value", answer.id);
+                inputElement.setAttribute("value", answer.id.toString());
 
-                const labelElement = document.createElement("label");
+                const labelElement:HTMLElement |null = document.createElement("label");
                 labelElement.setAttribute("for", inputId);
                 labelElement.innerText = answer.answer;
 
-                if (answer.correct === true) {
-                    optionElement.style.color = "#5FDC33";
-                    inputElement.style.display = "block";
-                    inputElement.style.border = "6px solid #5FDC33";
-                    inputElement.setAttribute("checked", "checked");
-                } else if (answer.correct === false) {
-                    optionElement.style.color = "#DC3333";
-                    inputElement.style.display = "block";
-                    inputElement.style.border = "6px solid #DC3333";
-                    inputElement.setAttribute("checked", "checked");
-                }
+                // if (answer.correct === true) {
+                //     optionElement.style.color = "#5FDC33";
+                //     inputElement.style.display = "block";
+                //     inputElement.style.border = "6px solid #5FDC33";
+                //     inputElement.setAttribute("checked", "checked");
+                // } else if (answer.correct === false) {
+                //     optionElement.style.color = "#DC3333";
+                //     inputElement.style.display = "block";
+                //     inputElement.style.border = "6px solid #DC3333";
+                //     inputElement.setAttribute("checked", "checked");
+                // }
 
                 optionElement.appendChild(inputElement);
                 optionElement.appendChild(labelElement);
@@ -103,7 +122,9 @@ export class Answers {
             });
 
             questionBlock.appendChild(optionsContainer);
-            this.optionsElement.appendChild(questionBlock);
+            if (this.optionsElement) {
+                this.optionsElement.appendChild(questionBlock);
+            }
         });
     }
 

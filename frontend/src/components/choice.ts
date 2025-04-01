@@ -27,12 +27,12 @@ export class Choice {
         const userInfo:UserInfoType | null = Auth.getUserInfo();
         if (userInfo) {
             try {
-                const result: DefaultResponseType|TestResultType = await CustomHttp.request(config.host + '/tests/results?userId=' + userInfo.userId);
+                const result: DefaultResponseType|TestResultType[] = await CustomHttp.request(config.host + '/tests/results?userId=' + userInfo.userId);
                 if (result) {
-                    if (result.error) {
-                        throw new Error(result.error)
+                    if ((result as DefaultResponseType).error !== undefined) {
+                        throw new Error((result as DefaultResponseType).message)
                     }
-                    this.testResult = result;
+                    this.testResult = result as TestResultType[];
                 }
             } catch (error) {
                 console.log(error);
@@ -42,32 +42,35 @@ export class Choice {
         this.processQuizzes();
     }
 
-    processQuizzes() {
-        const choiceOptionsElement = document.getElementById("choice-options");
-        if (this.quizzes && this.quizzes.length > 0) {
-            this.quizzes.forEach((quiz) => {
-                const that = this;
-                const choiceOptionElement = document.createElement("div");
+    private processQuizzes():void {
+        const choiceOptionsElement:HTMLElement | null = document.getElementById("choice-options");
+        if (this.quizzes && this.quizzes.length > 0 && choiceOptionsElement) {
+            this.quizzes.forEach((quiz:QuizListType) => {
+                const that:Choice = this;
+                const choiceOptionElement:HTMLElement | null = document.createElement("div");
                 choiceOptionElement.className = ("choice-option");
-                choiceOptionElement.setAttribute("data-id", quiz.id);
+                choiceOptionElement.setAttribute("data-id", quiz.id.toString());
                 choiceOptionElement.onclick = function () {
-                    that.chooseQuiz(this);
+                    that.chooseQuiz(<HTMLElement>this);
                 }
-                const choiceOptionTextElement = document.createElement("div");
+                const choiceOptionTextElement:HTMLElement | null = document.createElement("div");
                 choiceOptionTextElement.className = ("choice-option-text");
                 choiceOptionTextElement.innerText = quiz.name;
-                const choiceOptionArrowElement = document.createElement("div");
+                const choiceOptionArrowElement:HTMLElement | null = document.createElement("div");
                 choiceOptionArrowElement.className = ("choice-option-arrow");
 
-                const result = this.testResult.find(item => item.testId === quiz.id);
-                if (result) {
-                    const choiceOptionResultElement = document.createElement("div");
-                    choiceOptionResultElement.className = "choice-option-result";
-                    choiceOptionResultElement.innerHTML = '<div>Результат</div><div>'+ result.score + '/' + result.total + '</div>';
-                    choiceOptionElement.appendChild(choiceOptionResultElement);
+
+                if(this.testResult) {
+                    const result:TestResultType | undefined = this.testResult.find(item => item.testId === quiz.id);
+                    if (result) {
+                        const choiceOptionResultElement:HTMLElement | null = document.createElement("div");
+                        choiceOptionResultElement.className = "choice-option-result";
+                        choiceOptionResultElement.innerHTML = '<div>Результат</div><div>'+ result.score + '/' + result.total + '</div>';
+                        choiceOptionElement.appendChild(choiceOptionResultElement);
+                    }
                 }
 
-                const choiceOptionImgElement = document.createElement("img");
+                const choiceOptionImgElement:HTMLElement | null = document.createElement("img");
                 choiceOptionImgElement.setAttribute("src", "/img/arrow.png");
                 choiceOptionImgElement.setAttribute("alt", "arrow picture");
 
@@ -80,8 +83,8 @@ export class Choice {
 
     }
 
-    chooseQuiz(element) {
-        const dataId = element.getAttribute("data-id");
+    private chooseQuiz(element:HTMLElement):void {
+        const dataId:string | null = element.getAttribute("data-id");
         if (dataId) {
             location.href = "#/test?id=" + dataId;
         }

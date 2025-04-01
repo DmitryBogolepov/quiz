@@ -1,28 +1,37 @@
-import {UrlManager} from "../utils/url-manager.ts";
+import {UrlManager} from "../utils/url-manager";
 import {CustomHttp} from "../../services/custom-http";
 import config from "../../config/config";
 import {Auth} from "../../services/auth";
+import {QueryParams} from "../types/query-params.type";
+import {UserInfoType} from "../types/user-info.type";
+import {DefaultResponseType} from "../types/default-response.type";
+import {PassTestResponseType} from "../types/pass-test-response.type";
 
 export class Result {
+    private routeParams: QueryParams;
     constructor() {
         this.routeParams = UrlManager.getQueryParams();
         this.init();
     }
 
-    async init() {
-        const userInfo = Auth.getUserInfo();
+    private async init():Promise<void> {
+        const userInfo:UserInfoType | null = Auth.getUserInfo();
         if (!userInfo) {
-            location.href='#/'
+            location.href='#/';
+            return ;
         }
         if (this.routeParams.id) {
             try {
-                const result = await CustomHttp.request(config.host + '/tests/' + this.routeParams.id + '/result?userId=' + userInfo.userId);
+                const result:DefaultResponseType | PassTestResponseType = await CustomHttp.request(config.host + '/tests/' + this.routeParams.id + '/result?userId=' + userInfo.userId);
                 if (result) {
-                    if (result.error) {
-                        throw new Error(result.error);
+                    if ((result as DefaultResponseType).error !== undefined) {
+                        throw new Error((result as DefaultResponseType).message)
                     }
-                    document.getElementById('result-score').innerText = result.score + '/' + result.total;
-                    const viewAnswersButton = document.getElementById('view-answers');
+                    const resultScoreElement:HTMLElement | null = document.getElementById('result-score');
+                    if (resultScoreElement) {
+                        resultScoreElement.innerText = (result as PassTestResponseType).score + '/' + (result as PassTestResponseType).total;
+                    }
+                    const viewAnswersButton:HTMLElement | null = document.getElementById('view-answers');
                     if (viewAnswersButton) {
                         viewAnswersButton.addEventListener('click', (event) => {
                             event.preventDefault();

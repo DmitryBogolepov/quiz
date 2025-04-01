@@ -31,12 +31,12 @@ export class Router {
                 }
             },
             {
-                route: '#/singup',
+                route: '#/signup',
                 title: 'Регистрация',
-                template: 'templates/singup.html',
+                template: 'templates/signup.html',
                 styles: "styles/form.css",
                 load:() => {
-                    new Form('singup');
+                    new Form('signup');
                 }
             },
             {
